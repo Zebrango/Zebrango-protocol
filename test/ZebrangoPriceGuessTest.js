@@ -11,9 +11,10 @@ contract('VooDooPrice', (accounts)=>{
   const oracleUpdateAllowance = 30;
   const fee = 1000;
   let closeprice,lockprice
+  let claimRecipt;
   before(async()=>{
     aggregator = await AggregatorV3Mock.new();
-    zebrango = await Zebrango.new(intervalSeconds, bufferSeconds, fee, accounts[0], accounts[0]);
+    zebrango = await Zebrango.new(intervalSeconds, bufferSeconds, accounts[0], accounts[0], fee);
     zebrangoPriceGuess = await ZebrangoPriceGuess.new(aggregator.address, accounts[0], accounts[0], zebrango.address, intervalSeconds, bufferSeconds, minBet, oracleUpdateAllowance, fee);
     })
   describe('VooDooPrice deployment',  async () => {
@@ -36,9 +37,7 @@ contract('VooDooPrice', (accounts)=>{
             const _oracle = await zebrangoPriceGuess.oracle();
             const _genesisStarted = await zebrangoPriceGuess.genesisStarted();
             const _genesisLocked = await zebrangoPriceGuess.genesisLocked();
-            const round = await zebrangoPriceGuess.rounds(0);
-
-
+            const round = await zebrangoPriceGuess.rounds(1);
 
             assert.equal(_intervalSeconds, intervalSeconds);
             assert.equal(_bufferSeconds, bufferSeconds);
@@ -68,12 +67,12 @@ contract('VooDooPrice', (accounts)=>{
             })
             it('should check for the state after starting genesisRound.', async ()=>{
               const _genesisStarted = await zebrangoPriceGuess.genesisStarted();
-              const _round = await zebrangoPriceGuess.rounds.call(0);
+              const _round = await zebrangoPriceGuess.rounds.call(1);
 
               assert.equal(_genesisStarted, true);
               assert.equal(_round.startTimestamp, starttimestamp.timestamp)
               assert.equal(_round.closeTimestamp, closeTimeStamp)
-              assert.equal(_round.episode, 0)
+              assert.equal(_round.episode, 1)
               assert.equal(_round.totalAmount, 0)
             })
           })
@@ -81,13 +80,13 @@ contract('VooDooPrice', (accounts)=>{
 
             before(async ()=>{
 
-              await zebrangoPriceGuess.betUp(0, {from:accounts[0] ,value:web3.utils.toWei('1', 'ether')})
+              await zebrangoPriceGuess.betUp(1, {from:accounts[0] ,value:web3.utils.toWei('1', 'ether')})
 
               })
               it('should check for the state after betting up.', async ()=>{
 
-                const _round = await zebrangoPriceGuess.rounds.call(0);
-                const betInfo = await zebrangoPriceGuess.docs.call(0, accounts[0]);
+                const _round = await zebrangoPriceGuess.rounds.call(1);
+                const betInfo = await zebrangoPriceGuess.docs.call(1, accounts[0]);
 
 
                 assert.equal(_round.totalAmount, web3.utils.toWei('1', 'ether'))
@@ -102,12 +101,12 @@ contract('VooDooPrice', (accounts)=>{
 
               before(async ()=>{
 
-                await zebrangoPriceGuess.betDown(0, {from:accounts[1] ,value:web3.utils.toWei('1', 'ether')})
+                await zebrangoPriceGuess.betDown(1, {from:accounts[1] ,value:web3.utils.toWei('1', 'ether')})
 
               })
               it('should check for the state after betting down.', async ()=>{
-                const _round = await zebrangoPriceGuess.rounds.call(0);
-                const betInfo = await zebrangoPriceGuess.docs.call(0, accounts[1]);
+                const _round = await zebrangoPriceGuess.rounds.call(1);
+                const betInfo = await zebrangoPriceGuess.docs.call(1, accounts[1]);
 
 
                 assert.equal(_round.totalAmount, web3.utils.toWei('2', 'ether'))
@@ -130,10 +129,10 @@ contract('VooDooPrice', (accounts)=>{
               it('should check for the state after locking the genesis round.', async ()=>{
                 const currentRound = await zebrangoPriceGuess.currentRound.call();
                 const genesisLocked = await zebrangoPriceGuess.genesisLocked.call();
-                const _round = await zebrangoPriceGuess.rounds.call(0);
-                const _round1 = await zebrangoPriceGuess.rounds.call(1);
+                const _round = await zebrangoPriceGuess.rounds.call(1);
+                const _round1 = await zebrangoPriceGuess.rounds.call(2);
 
-                assert.equal(currentRound, 1)
+                assert.equal(currentRound, 2)
                 assert(genesisLocked)
 
                 assert(_round.lockOracleId > 0 )
@@ -143,7 +142,7 @@ contract('VooDooPrice', (accounts)=>{
                 assert(_round1.startTimestamp > 0)
                 assert(_round1.closeTimestamp > 0)
                 assert(_round1.lockTimestamp > 0)
-                assert.equal(_round1.episode , 1)
+                assert.equal(_round1.episode , 2)
 
               })
             })
@@ -162,12 +161,12 @@ contract('VooDooPrice', (accounts)=>{
                 const oracleLatestRoundId = await zebrangoPriceGuess.oracleLatestRoundId.call();
                 const reserve = await zebrangoPriceGuess.reserve.call();
 
-                const _round = await zebrangoPriceGuess.rounds.call(0);
-                const _round1 = await zebrangoPriceGuess.rounds.call(1);
-                const _round2 = await zebrangoPriceGuess.rounds.call(2);
+                const _round = await zebrangoPriceGuess.rounds.call(1);
+                const _round1 = await zebrangoPriceGuess.rounds.call(2);
+                const _round2 = await zebrangoPriceGuess.rounds.call(3);
 
 
-                assert.equal(currentRound, 2)
+                assert.equal(currentRound, 3)
                 assert(reserve > 0)
 
 
@@ -187,7 +186,7 @@ contract('VooDooPrice', (accounts)=>{
                 assert(_round2.startTimestamp > 0)
                 assert(_round2.lockTimestamp > 0)
                 assert(_round2.closeTimestamp > 0)
-                assert.equal(_round2.episode, 2)
+                assert.equal(_round2.episode, 3)
 
 
                 })
@@ -196,7 +195,7 @@ contract('VooDooPrice', (accounts)=>{
           describe('claim()', async () => {
 
             before(async ()=>{
-              const round = await zebrangoPriceGuess.rounds.call(0);
+              const round = await zebrangoPriceGuess.rounds.call(1);
               lockprice =  round.lockprice.toString();
               closeprice =  round.closeprice.toString();
               console.log(lockprice)
@@ -204,16 +203,20 @@ contract('VooDooPrice', (accounts)=>{
 
               })
             before(async()=>{
+
               //Up wins
               if(Number(closeprice)>Number(lockprice))
               {
                 console.log("Upwins")
-                let recipt = await zebrangoPriceGuess.claim([0],{from:accounts[0]})
+                let recipt = await zebrangoPriceGuess.claim([1],{from:accounts[0]})
+
               }
               //Down wins
               else{
                 console.log("Downwins")
-                let recipt = await zebrangoPriceGuess.claim([0],{from:accounts[1]})
+                let recipt = await zebrangoPriceGuess.claim([1],{from:accounts[1]})
+
+
               }
             })
 
@@ -224,6 +227,7 @@ contract('VooDooPrice', (accounts)=>{
               }
               //Down wins
               else{
+
 
               }
 

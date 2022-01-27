@@ -5,7 +5,7 @@ const { ZebrangoPriceGuessOperator} = require("../.env.json");
 const VooDooPrice = require('../build/contracts/ZebrangoPriceGuess.json');
 
 const wallet = new HDWalletProvider(
-  ZebrangoOperator,
+  ZebrangoPriceGuessOperator,
   'https://api.avax-test.network/ext/bc/C/rpc'
 
 )
@@ -15,7 +15,7 @@ let state = {
   lockTimestamp:null
 }
 const web3 = new Web3(wallet);
-let networkID = await web3.eth.net.getId()
+let networkID = '43113'
 const contract = new web3.eth.Contract(
  VooDooPrice.abi,
  VooDooPrice.networks[networkID].address

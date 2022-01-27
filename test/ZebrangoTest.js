@@ -6,10 +6,10 @@ contract('Zebrango', (accounts)=>{
   let zebrango;
   const eventPeriod = 40;
   const bufferSecods = 20;
-  const fee = 1000;
+  const participationFee = 1000;
 
   before(async()=>{
-    zebrango = await Zebrango.new(eventPeriod, bufferSecods, fee, accounts[0], accounts[0]);
+    zebrango = await Zebrango.new(eventPeriod, bufferSecods, accounts[0], accounts[0], participationFee);
 
   })
   describe('Zebrango deployment', async () => {
@@ -20,14 +20,14 @@ contract('Zebrango', (accounts)=>{
       it('should check for the initial state.', async ()=>{
           const _eventPeriod = await zebrango.eventPeriod();
           const _bufferSecods = await zebrango.bufferSeconds();
-          const _fee = await zebrango.fee();
+          const _fee = await zebrango.participationFee();
           const _currentEvent = await zebrango.currentEvent();
           const _genesisEventIsStarted = await zebrango.genesisEventIsStarted();
 
 
           assert.equal(_eventPeriod, eventPeriod);
           assert.equal(_bufferSecods, bufferSecods);
-          assert.equal(_fee, fee);
+          assert.equal(_fee, participationFee);
           assert.equal(_currentEvent, 0);
           assert.equal(_genesisEventIsStarted, false);
         })
@@ -51,9 +51,9 @@ contract('Zebrango', (accounts)=>{
 
     describe('addProp()', async () => {
         before(async ()=>{
-          await zebrango.addProp(1, {from:accounts[1], value:web3.utils.toWei('2','ether')});
-          await zebrango.addProp(1, {from:accounts[2], value:web3.utils.toWei('12','ether')});
-          await zebrango.addProp(1, {from:accounts[3], value:web3.utils.toWei('10','ether')});
+          await zebrango.addProp(1, {from:accounts[1], value:participationFee});
+          await zebrango.addProp(1, {from:accounts[2], value:participationFee});
+          await zebrango.addProp(1, {from:accounts[3], value:participationFee});
 
         })
 
@@ -77,13 +77,13 @@ contract('Zebrango', (accounts)=>{
       })
     describe('voteOnProposal()', async () => {
         before(async ()=>{
-          await zebrango.voteOnProposal(1, 0, {from:accounts[2], value:web3.utils.toWei('1','ether')});
-          await zebrango.voteOnProposal(1, 0, {from:accounts[1], value:web3.utils.toWei('2','ether')});
-          await zebrango.voteOnProposal(1, 1, {from:accounts[3], value:web3.utils.toWei('3','ether')});
-          await zebrango.voteOnProposal(1, 2, {from:accounts[4], value:web3.utils.toWei('5','ether')});
-          await zebrango.voteOnProposal(1, 2, {from:accounts[5], value:web3.utils.toWei('2','ether')});
-          await zebrango.voteOnProposal(1, 2, {from:accounts[6], value:web3.utils.toWei('1','ether')});
-          await zebrango.voteOnProposal(1, 2, {from:accounts[7], value:web3.utils.toWei('2','ether')});
+          await zebrango.voteOnProposal(1, 0, {from:accounts[2], value:participationFee});
+          await zebrango.voteOnProposal(1, 0, {from:accounts[1], value:participationFee});
+          await zebrango.voteOnProposal(1, 1, {from:accounts[3], value:participationFee});
+          await zebrango.voteOnProposal(1, 2, {from:accounts[4], value:participationFee});
+          await zebrango.voteOnProposal(1, 2, {from:accounts[5], value:participationFee});
+          await zebrango.voteOnProposal(1, 2, {from:accounts[6], value:participationFee});
+          await zebrango.voteOnProposal(1, 2, {from:accounts[7], value:participationFee});
         })
         it('should check for the state after voting.', async ()=>{
           let prop1 = await zebrango.getProposals(1 , 0);
@@ -102,7 +102,7 @@ contract('Zebrango', (accounts)=>{
           assert.equal(prop3._maker, accounts[3]);
 
           bal = await web3.eth.getBalance(zebrango.address);
-          assert.equal(web3.utils.fromWei(bal,'ether'), 40);
+          assert.equal(bal, participationFee*10);
           })
     })
     describe('executeEvent()', async () => {
