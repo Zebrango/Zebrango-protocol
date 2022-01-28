@@ -1,30 +1,28 @@
-const HDWalletProvider = require('@truffle/hdwallet-provider');
 const Web3 = require('web3');
-const { ZebrangoPriceGuessOperator} = require("../.env.json");
-
+const  { ZebrangoPriceGuessOperator} = require ("../.env.json");
 const VooDooPrice = require('../build/contracts/ZebrangoPriceGuess.json');
+const operatorAddress = "0xC95AC2e92a7125C57AcbFC3b29a13729e74aaaF3"
+const RPC_URL = 'https://api.avax-test.network/ext/bc/C/rpc'
+const ZebrangoPriceGuessAddress = "0x6C96a69594f24C7FAd66b66ded57a21D6EFC9c52"
 
-const wallet = new HDWalletProvider(
-  ZebrangoPriceGuessOperator,
-  'https://api.avax-test.network/ext/bc/C/rpc'
-
-)
 let state = {
   currentRound: null,
   genesisStarted:null,
   lockTimestamp:null
 }
-const web3 = new Web3(wallet);
-let networkID = '43113'
+
+const web3 = new Web3(RPC_URL);
+
+let networkID = '43113' //fuji network
 const contract = new web3.eth.Contract(
  VooDooPrice.abi,
- VooDooPrice.networks[networkID].address
+ ZebrangoPriceGuessAddress
 );
 
 async function init(){
-  setInterval(updateState,10000)
-  setTimeout(makeAction,12000)
-  setInterval(makeAction, 40000)
+  setInterval(updateState,150000)
+  //setTimeout(makeAction,12000)
+  setInterval(makeAction, 25000)
 }
 
 async function makeAction(){
@@ -66,9 +64,26 @@ async function updateState(){
 async function excuteRound(){
   console.log('excuting Round')
   try{
-  let recipt = await contract.methods.executeRound().send({from:wallet.addresses[0], gas:3000000})
+  const tx = contract.methods.executeRound();
+  const gas = await tx.estimateGas({from: operatorAddress});
+  const gasPrice = await web3.eth.getGasPrice();
+  const data = tx.encodeABI();
+  const nonce = await web3.eth.getTransactionCount(operatorAddress);
+
+  const signedTx = await web3.eth.accounts.signTransaction(
+    {
+      to: contract.options.address,
+      data,
+      gas,
+      gasPrice,
+      nonce,
+      chainId: networkID
+    },
+    ZebrangoPriceGuessOperator
+  );
+  const receipt = await web3.eth.sendSignedTransaction(signedTx.rawTransaction);
   await updateState();
-  console.log(recipt)
+  console.log(receipt.transactionHash)
 }catch(error){
   console.log(error)
 }
@@ -77,19 +92,64 @@ async function excuteRound(){
 
 async function startGenesisRound(){
   console.log('starting the genesis')
-  let recipt = await contract.methods.genesisStartRound().send({from:wallet.addresses[0], gas:3000000})
-  await updateState();
+  try{
+  const tx = contract.methods.genesisStartRound();
+  const gas = await tx.estimateGas({from: operatorAddress});
+  const gasPrice = await web3.eth.getGasPrice();
+  const data = tx.encodeABI();
+  const nonce = await web3.eth.getTransactionCount(operatorAddress);
+
+  const signedTx = await web3.eth.accounts.signTransaction(
+    {
+      to: contract.options.address,
+      data,
+      gas,
+      gasPrice,
+      nonce,
+      chainId: networkID
+    },
+    ZebrangoPriceGuessOperator
+  );
+  const receipt = await web3.eth.sendSignedTransaction(signedTx.rawTransaction);
+  console.log(receipt.transactionHash)
+
   state.genesisStarted = true;
-  console.log(recipt)
+}catch(error){
+  console.log(error)
+}
+  await updateState();
+
   return
 }
 
 async function lockgenesisRound(){
       console.log('locking genesis Round')
-      let recipt = await contract.methods.genesisLockRound().send({from:wallet.addresses[0], gas:3000000})
-      console.log(recipt)
-      await updateState();
+      try{
+      const tx = contract.methods.genesisLockRound();
+      const gas = await tx.estimateGas({from: operatorAddress});
+      const gasPrice = await web3.eth.getGasPrice();
+      const data = tx.encodeABI();
+      const nonce = await web3.eth.getTransactionCount(operatorAddress);
+
+      const signedTx = await web3.eth.accounts.signTransaction(
+        {
+          to: contract.options.address,
+          data,
+          gas,
+          gasPrice,
+          nonce,
+          chainId: networkID
+        },
+        ZebrangoPriceGuessOperator
+      );
+      const receipt = await web3.eth.sendSignedTransaction(signedTx.rawTransaction);
+      console.log(receipt.transactionHash)
       state.genesisLocked = true;
+
+    }catch(error){
+      console.log(error)
+    }
+      await updateState();
       return;
 }
 
