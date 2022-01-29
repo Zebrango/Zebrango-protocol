@@ -50,7 +50,7 @@ this function Ends the current event, starts the next one.
 internal functions :  
 
 **start the next Eventand lock the current one:**  
-this function triggers when the operator execute the executeEvent.
+this functions triggers when the operator execute the ***executeEvent()*** function.
 
 
 ```bash
@@ -59,15 +59,15 @@ this function triggers when the operator execute the executeEvent.
 ```
 
 **withdrawing the fees collected from all the games collection:**  
-this function triggers when the Event starts.
-
+this function triggers by the  ***_safeStartEvent(uint256 _eventID)***  function. and it will collect
+the accumulated fees in each game on the plattform
 
 ```bash
     function _withdrowGames(uint256 _eventID) internal
 ```
 
 **set the winners for the current Event:**  
-this function triggers when the Event Ends.
+this function triggers by the ***_safeLockEvent(uint256 _eventID)*** function . and it will set the winners for the current Event
 
 
 ```bash
