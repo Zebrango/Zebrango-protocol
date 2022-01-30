@@ -9,7 +9,7 @@ by sharing thier games which will be added to the Echosystem after a fair Voting
 
 # contracts
 
-* **Zebrango-Gov.**  
+* [**Zebrango-Gov.**](https://testnet.snowtrace.io/address/0x4257D70Da346Db204AEA3B6Be22D9c5967c5D333#code)  
 Zebrango Core contract handles the Events on Zebrango, here are the most important functions:  
 
 
@@ -74,7 +74,7 @@ this function triggers by the ***_safeLockEvent(uint256 _eventID)*** function . 
     function _setWinners() internal
 ```
 
-* **ZebrangoPriceGuess**
+* [**ZebrangoPriceGuess**](https://testnet.snowtrace.io/address/0x1c234a147786b14d67a9b3f7a7801dae752a0fc2#code)
 
 this game was inspired by the pancakeswap price prediction game [Pancakeswap Price Predicton](https://pancakeswap.finance/prediction)
 
